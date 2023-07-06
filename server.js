@@ -8,27 +8,52 @@ const users = [
   {id:2, username:"Deepu", password:"Deepu123", isAdmin:false}
 ]
 
-//login end point
-app.post("/api/login", (request,response) => {
-  const {username,password} = request.body;
-  //find user
-  const user = users.find(u => u.username === username && u.password === password);
 
-  if(user){
+
+let refreshTokens = [];
+
+//refresh Token
+app.post("/api/refresh", (req, res) => {
+  // Take the refresh token from the user
+  const refreshToken = req.body.token;
+
+  //Send error if there is no token or it's invalid
+  if (!refreshToken) return res.status(403).json("You are not Authenticated!");
+
+  //if everything is ok, create new access token, refresh token and send to user
+});
+
+// const generateAccessToken =
+
+// login end point
+app.post("/api/login", (request, response) => {
+  const { username, password } = request.body;
+  //find user
+  const user = users.find(
+    (u) => u.username === username && u.password === password
+  );
+
+  if (user) {
     //generate an access token
     const accessToken = jwt.sign(
-      {id:user.id, isAdmin:user.isAdmin}, 
-      "mySecretkey"
-      );
-      response.json({
-        username:user.username,
-        isAdmin:user.isAdmin,
-        accessToken,
-      })
-  }else{
-    response.status(400).json("Please check username and Password")
+      { id: user.id, isAdmin: user.isAdmin },
+      "mySecretkey",
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { id: user.id, isAdmin: user.isAdmin },
+      "myRefreshTokenSecretkey",
+      { expiresIn: "15m" }
+    );
+    response.json({
+      username: user.username,
+      isAdmin: user.isAdmin,
+      accessToken,
+    });
+  } else {
+    response.status(400).json("Please check username and Password");
   }
-})
+});
 
 const verify = (req,res,next) => {
   const authHeader = req.headers.authorization;
